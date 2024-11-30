@@ -11,7 +11,7 @@
     <div id="fileList">
         <ul>
             {% for file in files %}
-            <li>{{ file.path }}</li>
+            <li><a href="{{ url_for('serve_file', filename=file.path) }}" target="_blank">{{ file.path }}</a></li>
             {% endfor %}
         </ul>
     </div>
@@ -20,6 +20,13 @@
         <button id="encryptButton">Encrypt Files</button>
         <button id="decryptButton">Decrypt Files</button>
     </div>
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeButton">&times;</span>
+            <pre id="modalMessage"></pre>
+        </div>
+    </div>
+ 
     <script src="/static/js/script.js"></script>
 </body>
 </html>

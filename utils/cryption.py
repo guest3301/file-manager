@@ -14,7 +14,7 @@ class Encryptor:
         self.files = None
         self.BASE_DIR = BASE_DIR
         try:
-            self.files = [item for item in scan_recurse(BASE_DIR) if item != "key.key"]
+            self.files = [item for item in scan_recurse(self.BASE_DIR) if item != "key.key"]
         except Exception as e:
             print(f"Exception: {e}")
 
@@ -34,27 +34,45 @@ class Encryptor:
         return self.key
 
     def encrypt(self, password):
-        key = self.derive_key(password)
+        self.key = self.derive_key(password)
+        try:
+            self.files = [item for item in scan_recurse(self.BASE_DIR) if item != "key.key"]
+        except Exception as e:
+            print(f"Exception: {e}")
+            return []
         for file in self.files.copy():
             try:
                 if not os.path.isfile(file):
                     print(f"{file} not found or is not a file, skipping.")
                     continue
+                if str(file.path).endswith('.enc'):
+                    continue
                 with open(file, 'rb') as f_in:
                     with open(str(file.path) + '.enc', 'wb') as f_out:
                         for chunk in iter(lambda: f_in.read(2 * 1024 * 1024), b''):
-                            encrypted_chunk = Fernet(key).encrypt(chunk)
+                            encrypted_chunk = Fernet(self.key).encrypt(chunk)
                             print(f"Encrypting {file.name} {len(chunk)};", end="\r")
                             f_out.write(encrypted_chunk)
                 os.unlink(file.path)
                 print(f'Encrypted: {file.path}')
-                print(f'Key: {key}')
+                key_to_share = self.key
+                self.key = None
+                return self.files, str(key_to_share.decode())
             except Exception as e:
                 print(f"Error encrypting {file}: {e}")
     
-    def decrypt(self, key):
+    def decrypt(self, keyy):
+        try:
+            # Validate the key length
+            if len(base64.urlsafe_b64decode(keyy)) != 32:
+                raise ValueError("Invalid key length. Key must be 32 url-safe base64-encoded bytes.")
+            
+            self.files = [item for item in scan_recurse(self.BASE_DIR) if item != "key.key"]
+        except Exception as e:
+            print(f"Exception: {e}")
+            return []
         for file in self.files.copy():
-            try:
+            
                 print(f"Decrypting {file}...", end="\r")
                 if not os.path.isfile(file):
                     print(f"{file} not found or is not a file, skipping.")
@@ -65,17 +83,16 @@ class Encryptor:
                     with open(str(os.path.splitext(file.path)[0]), 'wb') as f_out:
                         try:
                             for chunk in iter(lambda: f_in.read(2 * 1024 * 1024), b''):
-                                decrypted_chunk = Fernet(key).decrypt(chunk)
+                                decrypted_chunk = Fernet(keyy).decrypt(chunk)
                                 f_out.write(decrypted_chunk)
                         except:
                             for chunk in iter(lambda: f_in.read(100 * 1024 * 1024), b''):
-                                decrypted_chunk = Fernet(key).decrypt(chunk)
+                                decrypted_chunk = Fernet(keyy).decrypt(chunk)
                                 f_out.write(decrypted_chunk)
                 os.unlink(file.path)
                 print(f'Decrypted: {file.path}')
-                time.sleep(2)
-            except Exception as e:
-                print(f"Error decrypting {file.path}: {e}")
+                return self.files
+            
 
 def main():
     encryptor = Encryptor()

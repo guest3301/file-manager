@@ -14,9 +14,15 @@ document.getElementById('encryptButton').addEventListener('click', () => {
     })
     .then(response => response.json())
     .then(data => {
-        alert(data.message);
+        showModal(JSON.stringify(data, null, 2));
+        if (data.success) {
+            updateFileList();
+        }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        console.error('Error:', error);
+        showModal(`Error: ${error}`);
+    });
 });
 
 document.getElementById('decryptButton').addEventListener('click', () => {
@@ -35,7 +41,44 @@ document.getElementById('decryptButton').addEventListener('click', () => {
     })
     .then(response => response.json())
     .then(data => {
-        alert(data.message);
+        showModal(JSON.stringify(data, null, 2));
+        if (data.success) {
+            updateFileList();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showModal(`Error: ${error}`);
+    });
+});
+
+function updateFileList() {
+    fetch('/')
+    .then(response => response.text())
+    .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newFileList = doc.getElementById('fileList').innerHTML;
+        document.getElementById('fileList').innerHTML = newFileList;
     })
     .catch(error => console.error('Error:', error));
-});
+}
+
+function showModal(message) {
+    const modal = document.getElementById('modal');
+    const modalMessage = document.getElementById('modalMessage');
+    const closeButton = document.getElementById('closeButton');
+
+    modalMessage.textContent = message;
+    modal.style.display = "block";
+
+    closeButton.onclick = function() {
+        modal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+}
