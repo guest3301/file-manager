@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, send_from_directory
+from flask import Flask, request, render_template, send_from_directory, send_file
 import os
 from utils.cryption import Encryptor
 from utils.utils import scan_recurse, make_response, handle_error
@@ -40,16 +40,16 @@ def decrypt():
         return handle_error("An error occured while decrypting.")
 
 
-@app.route('/files/<path:filename>')
+@app.route('/<path:filename>')
 def serve_file(filename):
     try:
         # Debugging: Print the file path
-        file_path = os.path.join(BASE_DIR, filename)
+        file_path = filename # os.path.join(BASE_DIR, filename)
         print(f"Serving file: {file_path}")
         if not os.path.exists(file_path):
             print(f"File not found: {file_path}")
             return handle_error("File not found", 404)
-        return send_from_directory(BASE_DIR, filename)
+        return send_file(filename) 
     except Exception as e:
         return handle_error(f"An error occurred while serving the file: {e}")
 

