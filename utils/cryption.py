@@ -91,7 +91,7 @@ class Encryptor:
                                 f_out.write(decrypted_chunk)
                 os.unlink(file.path)
                 print(f'Decrypted: {file.path}')
-                return self.files
+        return self.files
             
 
 def main():
